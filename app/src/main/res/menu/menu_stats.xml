@@ -6,4 +6,10 @@
         android:title="Chia sẻ"
         android:icon="@android:drawable/ic_menu_share"
         app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_clear_filter"
+        android:title="Xoá lọc"
+        android:icon="@android:drawable/ic_menu_close_clear_cancel"
+        app:showAsAction="ifRoom" />
+
 </menu>

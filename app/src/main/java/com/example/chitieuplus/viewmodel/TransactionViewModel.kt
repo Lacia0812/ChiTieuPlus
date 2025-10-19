@@ -18,4 +18,7 @@ class TransactionViewModel(app: Application) : AndroidViewModel(app) {
     fun delete(item: TransactionEntity) = viewModelScope.launch { repo.delete(item) }
     suspend fun getByIdOnce(id: Int) = repo.getByIdOnce(id)
     fun search(keyword: String) = repo.search("%$keyword%")
+
+    fun getByDateRange(from: Long, to: Long) = repo.getByDateRange(from, to)
+
 }

@@ -1,5 +1,6 @@
 package com.example.chitieuplus.ui.stats
 
+import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.*
@@ -13,6 +14,7 @@ import com.example.chitieuplus.data.TransactionType
 import com.example.chitieuplus.databinding.FragmentStatsBinding
 import com.example.chitieuplus.viewmodel.TransactionViewModel
 import kotlin.math.abs
+import java.util.Calendar
 import java.util.Locale
 
 class StatsFragment : Fragment() {
@@ -22,9 +24,16 @@ class StatsFragment : Fragment() {
 
     private val vm: TransactionViewModel by viewModels()
 
+    // state lọc ngày (epochMillis bắt đầu/kết thúc, null = không lọc)
+    private var fromDay: Long? = null
+    private var toDay: Long? = null
+
+    // dữ liệu theo khoảng ngày (nếu có)
+    private var filteredItems: List<TransactionEntity>? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setHasOptionsMenu(true) // enable menu share
+        setHasOptionsMenu(true) // enable menu share + clear filter
     }
 
     override fun onCreateView(
@@ -36,34 +45,110 @@ class StatsFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        // Quan sát "tổng hệ thống" (dùng khi KHÔNG lọc ngày)
         vm.totalIncome.observe(viewLifecycleOwner) {
-            // chỉ hiển thị + tính toán lại ở updateBalanceAndBars()
-            vb.tvIncome.text = "Tổng thu: ${formatVnd((it ?: 0))}"
-            updateBalanceAndBars()
+            if (!isFiltering()) {
+                vb.tvIncome.text = "Tổng thu: ${formatVnd((it ?: 0))}"
+                updateUI()
+            }
         }
         vm.totalExpense.observe(viewLifecycleOwner) {
-            // hiển thị có dấu âm (nếu muốn), nhưng tính toán dùng |chi|
-            val expenseAbs = abs(it ?: 0)
-            vb.tvExpense.text = "Tổng chi: ${formatVnd(-expenseAbs)}"
-            updateBalanceAndBars()
+            if (!isFiltering()) {
+                val expenseAbs = abs(it ?: 0)
+                vb.tvExpense.text = "Tổng chi: ${formatVnd(-expenseAbs)}"
+                updateUI()
+            }
         }
 
+        // Danh mục chi nổi bật lấy từ danh sách hiện hành:
+        // - nếu lọc: từ filteredItems
+        // - nếu không lọc: từ vm.items
         vm.items.observe(viewLifecycleOwner) { list ->
+            if (!isFiltering()) {
+                renderTopExpenseCategories(list)
+            }
+        }
+
+        // Nút chọn ngày
+        vb.btnFrom.setOnClickListener { pickDate(isFrom = true) }
+        vb.btnTo.setOnClickListener { pickDate(isFrom = false) }
+
+        // Hiển thị trạng thái ban đầu
+        showRangeLabel()
+    }
+
+    /** Hiện DatePicker và áp dụng lọc */
+    private fun pickDate(isFrom: Boolean) {
+        val cal = Calendar.getInstance()
+        val dlg = DatePickerDialog(
+            requireContext(),
+            { _, y, m, d ->
+                val millis = Calendar.getInstance().apply {
+                    set(Calendar.YEAR, y)
+                    set(Calendar.MONTH, m)
+                    set(Calendar.DAY_OF_MONTH, d)
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }.timeInMillis
+                if (isFrom) {
+                    fromDay = millis
+                    // nếu chưa có toDay -> mặc định toDay = fromDay cuối ngày
+                    if (toDay == null) {
+                        toDay = endOfDayMillis(millis)
+                    }
+                } else {
+                    toDay = endOfDayMillis(millis)
+                    if (fromDay == null) {
+                        fromDay = startOfDayMillis(millis)
+                    }
+                }
+                applyFilterIfReady()
+            },
+            cal.get(Calendar.YEAR),
+            cal.get(Calendar.MONTH),
+            cal.get(Calendar.DAY_OF_MONTH)
+        )
+        dlg.show()
+    }
+
+    /** Khi đã có từ & đến -> gọi VM getByDateRange và tính tổng từ list */
+    private fun applyFilterIfReady() {
+        val f = fromDay
+        val t = toDay
+        if (f == null || t == null) {
+            showRangeLabel()
+            return
+        }
+        // đảm bảo f <= t
+        val from = minOf(f, t)
+        val to = maxOf(f, t)
+
+        // observe tạm thời dữ liệu theo khoảng
+        vm.getByDateRange(from, to).observe(viewLifecycleOwner) { list ->
+            filteredItems = list
+            // tự tính tổng theo list lọc
+            val income = list.filter { it.type == TransactionType.INCOME }.sumOf { it.amount }.coerceAtLeast(0)
+            val expenseAbs = abs(list.filter { it.type == TransactionType.EXPENSE }.sumOf { it.amount })
+            vb.tvIncome.text = "Tổng thu: ${formatVnd(income)}"
+            vb.tvExpense.text = "Tổng chi: ${formatVnd(-expenseAbs)}"
             renderTopExpenseCategories(list)
+            showRangeLabel(from, to)
+            updateUI(incomeOverride = income, expenseAbsOverride = expenseAbs)
         }
     }
 
-    /** Tính số dư + cập nhật % Thu/Chi, ProgressBar, PieView */
-    private fun updateBalanceAndBars() {
-        val income = (vm.totalIncome.value ?: 0).coerceAtLeast(0)    // đảm bảo không âm
-        val expenseAbs = abs(vm.totalExpense.value ?: 0)              // dùng trị tuyệt đối
-
+    /** Cập nhật số dư + % + biểu đồ.
+     *  Nếu truyền income/expenseAbs override (lọc) thì dùng; nếu không -> dùng tổng hệ thống.
+     */
+    private fun updateUI(incomeOverride: Long? = null, expenseAbsOverride: Long? = null) {
+        val income = incomeOverride ?: (vm.totalIncome.value ?: 0).coerceAtLeast(0)
+        val expenseAbs = expenseAbsOverride ?: abs(vm.totalExpense.value ?: 0)
         val total = income + expenseAbs
         val balance = income - expenseAbs
 
         vb.tvBalance.text = "Còn lại: ${formatVnd(balance)}"
-
-        // cập nhật biểu đồ tròn
         vb.pieView.setData(income, expenseAbs)
 
         if (total <= 0) {
@@ -88,15 +173,14 @@ class StatsFragment : Fragment() {
         vb.tvExpensePct.text = "Chi: $expensePct%"
     }
 
-    /** Gom nhóm top danh mục CHI và render list; bấm giữ để share nhanh */
+    /** Render top danh mục CHI từ list hiện hành */
     private fun renderTopExpenseCategories(list: List<TransactionEntity>) {
         val container = vb.chipsContainer
         container.removeAllViews()
 
         val grouped = list.filter { it.type == TransactionType.EXPENSE }
             .groupBy { it.category }
-            .mapValues { (_, items) -> items.sumOf { it.amount } }
-            .mapValues { (_, sum) -> abs(sum) } // đảm bảo dương để hiển thị
+            .mapValues { (_, items) -> abs(items.sumOf { it.amount }) } // dương để so sánh
             .toList()
             .sortedByDescending { it.second }
             .take(5)
@@ -108,13 +192,13 @@ class StatsFragment : Fragment() {
         grouped.forEach { (cat, total) -> addChip(cat, total) }
     }
 
-    private fun addChip(title: String, amount: Long) {
+    private fun addChip(title: String, amountAbs: Long) {
         val tv = TextView(requireContext()).apply {
-            text = "• $title: ${formatVnd(-amount)}" // hiển thị có dấu âm cho danh mục chi
+            text = "• $title: ${formatVnd(-amountAbs)}" // chi hiển thị âm
             textSize = 14f
             setPadding(0, 6, 0, 6)
             setOnLongClickListener {
-                shareText("Danh mục: $title — ${formatVnd(-amount)}")
+                shareText("Danh mục: $title — ${formatVnd(-amountAbs)}")
                 true
             }
         }
@@ -122,11 +206,10 @@ class StatsFragment : Fragment() {
     }
 
     private fun formatVnd(value: Long): String {
-        // hiển thị theo vi-VN, giữ dấu âm nếu value < 0
         return String.format(Locale("vi", "VN"), "%,d ₫", value)
     }
 
-    /** MENU (Share) **/
+    /** MENU (Share + Clear filter) */
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.menu_stats, menu)
     }
@@ -134,15 +217,14 @@ class StatsFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_share -> {
-                val income = (vm.totalIncome.value ?: 0).coerceAtLeast(0)
-                val expenseAbs = abs(vm.totalExpense.value ?: 0)
+                val (income, expenseAbs) = currentTotals()
                 val balance = income - expenseAbs
                 val total = income + expenseAbs
                 val incomePct = if (total > 0) (income * 100 / total) else 0
                 val expensePct = 100 - incomePct
 
                 val msg = buildString {
-                    appendLine("ChiTieuPlus – Tổng quan")
+                    appendLine("ChiTieuPlus – Tổng quan" + rangeSuffixForShare())
                     appendLine("Tổng thu: ${formatVnd(income)} ($incomePct%)")
                     appendLine("Tổng chi: ${formatVnd(-expenseAbs)} ($expensePct%)")
                     appendLine("Còn lại: ${formatVnd(balance)}")
@@ -150,8 +232,67 @@ class StatsFragment : Fragment() {
                 shareText(msg)
                 true
             }
+            R.id.action_clear_filter -> {
+                // Xoá lọc
+                fromDay = null
+                toDay = null
+                filteredItems = null
+                showRangeLabel()
+                // reset hiển thị theo “tổng hệ thống”
+                vm.items.value?.let { renderTopExpenseCategories(it) }
+                updateUI()
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    private fun currentTotals(): Pair<Long, Long> {
+        return if (isFiltering() && filteredItems != null) {
+            val inc = filteredItems!!.filter { it.type == TransactionType.INCOME }.sumOf { it.amount }.coerceAtLeast(0)
+            val expAbs = abs(filteredItems!!.filter { it.type == TransactionType.EXPENSE }.sumOf { it.amount })
+            inc to expAbs
+        } else {
+            val inc = (vm.totalIncome.value ?: 0).coerceAtLeast(0)
+            val expAbs = abs(vm.totalExpense.value ?: 0)
+            inc to expAbs
+        }
+    }
+
+    private fun isFiltering() = (fromDay != null && toDay != null)
+
+    private fun showRangeLabel(from: Long? = fromDay, to: Long? = toDay) {
+        vb.tvRange.text = if (from != null && to != null) {
+            "Khoảng ngày: ${formatDate(from)} — ${formatDate(to)}"
+        } else {
+            "(Không lọc theo ngày)"
+        }
+    }
+
+    private fun formatDate(millis: Long): String {
+        val cal = Calendar.getInstance().apply { timeInMillis = millis }
+        val d = cal.get(Calendar.DAY_OF_MONTH)
+        val m = cal.get(Calendar.MONTH) + 1
+        val y = cal.get(Calendar.YEAR)
+        return "%02d/%02d/%04d".format(d, m, y)
+    }
+
+    private fun startOfDayMillis(millis: Long): Long {
+        val c = Calendar.getInstance().apply { timeInMillis = millis }
+        c.set(Calendar.HOUR_OF_DAY, 0)
+        c.set(Calendar.MINUTE, 0)
+        c.set(Calendar.SECOND, 0)
+        c.set(Calendar.MILLISECOND, 0)
+        return c.timeInMillis
+    }
+
+    private fun endOfDayMillis(millis: Long): Long {
+        val c = Calendar.getInstance().apply { timeInMillis = millis }
+        c.set(Calendar.HOUR_OF_DAY, 23)
+        c.set(Calendar.MINUTE, 59)
+        c.set(Calendar.SECOND, 59)
+        c.set(Calendar.MILLISECOND, 999)
+        return c.timeInMillis
     }
 
     private fun shareText(text: String) {
@@ -161,6 +302,11 @@ class StatsFragment : Fragment() {
             putExtra(Intent.EXTRA_TEXT, text)
         }
         startActivity(Intent.createChooser(send, "Chia sẻ qua…"))
+    }
+
+    private fun rangeSuffixForShare(): String {
+        val f = fromDay; val t = toDay
+        return if (f != null && t != null) " (${formatDate(f)}–${formatDate(t)})" else ""
     }
 
     override fun onDestroyView() {
