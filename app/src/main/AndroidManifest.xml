@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Quyền hiển thị thông báo cho Android 13+ -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.ChiTieuPlus">
+
+        <!-- MainActivity -->
+        <activity
+            android:name=".ui.main.MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.ChiTieuPlus">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Service xử lý cảnh báo ngân sách -->
+        <service
+            android:name=".service.BudgetAlertService"
+            android:exported="false" />
+
+        <!-- BroadcastReceiver hiển thị notification khi vượt ngân sách -->
+        <receiver
+            android:name=".receiver.BudgetAlertReceiver"
+            android:enabled="true"
+            android:exported="false" />
+        <!-- Không cần intent-filter vì dùng explicit broadcast -->
+
+    </application>
+
+</manifest>

@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">ChiTieuPlus</string>
+    <string name="add">Thêm</string>
+    <!-- có thể thêm: -->
+    <string name="add_transaction">Thêm giao dịch</string>
+    <string name="stats">Xem thống kê</string>
+    <string name="search">Tìm kiếm</string>
+    <string name="search_hint">Tìm theo tên/loại</string>
+    <string name="title_hint">Tên khoản</string>
+    <string name="amount_hint">Số tiền (VND)</string>
+    <string name="category_hint">Phân loại</string>
+    <string name="note_hint">Ghi chú</string>
+    <string name="income">Thu</string>
+    <string name="expense">Chi</string>
+    <string name="pick_date">Chọn ngày</string>
+    <string name="save">Lưu</string>
+    <!-- category: -->
+    <string name="hint_category">Phân loại</string>
+    <string name="category_sample">Ăn uống</string>
+    <string name="cd_edit_category">Sửa danh mục</string>
+    <string name="cd_delete_category">Xoá danh mục</string>
+    <string name="add_category">Thêm danh mục</string>
+    <string name="cd_tab_type">Chọn loại danh mục: Chi hoặc Thu</string>
+    <string name="manage_categories">Quản lý danh mục</string>
+    <string name="empty_category">Chưa có danh mục</string>
+    <!-- category: -->
+    <!-- budget: -->
+    <string name="budget">Ngân sách</string>
+    <!-- budget: -->
+
+</resources>

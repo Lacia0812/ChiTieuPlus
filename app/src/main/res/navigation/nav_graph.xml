@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/transactionListFragment">
+
+    <!-- Danh sách giao dịch -->
+    <fragment
+        android:id="@+id/transactionListFragment"
+        android:name="com.example.chitieuplus.ui.list.TransactionListFragment"
+        android:label="Chi tiêu">
+
+        <action
+            android:id="@+id/action_list_to_edit"
+            app:destination="@id/editTransactionFragment" />
+
+        <action
+            android:id="@+id/action_list_to_stats"
+            app:destination="@id/statsFragment" />
+
+        <action
+            android:id="@+id/action_list_to_categoryManager"
+            app:destination="@id/categoryManagerFragment" />
+
+        <!-- điều hướng sang BudgetFragment -->
+        <action
+            android:id="@+id/action_list_to_budget"
+            app:destination="@id/budgetFragment" />
+    </fragment>
+
+    <!-- Sửa/Thêm giao dịch -->
+    <fragment
+        android:id="@+id/editTransactionFragment"
+        android:name="com.example.chitieuplus.ui.edit.EditTransactionFragment"
+        android:label="Sửa/Thêm">
+
+        <argument
+            android:name="id"
+            app:argType="integer"
+            android:defaultValue="-1" />
+
+        <action
+            android:id="@+id/action_edit_to_categoryManager"
+            app:destination="@id/categoryManagerFragment" />
+    </fragment>
+
+    <!-- Thống kê -->
+    <fragment
+        android:id="@+id/statsFragment"
+        android:name="com.example.chitieuplus.ui.stats.StatsFragment"
+        android:label="Thống kê">
+
+        <!-- điều hướng sang BudgetFragment -->
+        <action
+            android:id="@+id/action_stats_to_budget"
+            app:destination="@id/budgetFragment" />
+    </fragment>
+
+    <!-- Quản lý danh mục (Chi/Thu) -->
+    <fragment
+        android:id="@+id/categoryManagerFragment"
+        android:name="com.example.chitieuplus.ui.category.CategoryManagerFragment"
+        android:label="Quản lý danh mục" />
+
+    <!--  MÀN NGÂN SÁCH -->
+    <fragment
+        android:id="@+id/budgetFragment"
+        android:name="com.example.chitieuplus.ui.budget.BudgetFragment"
+        android:label="Ngân sách" />
+
+</navigation>

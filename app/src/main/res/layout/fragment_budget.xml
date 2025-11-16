@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Tiêu đề màn hình -->
+    <TextView
+        android:id="@+id/txtBudgetTitle"
+        android:text="Quản lý ngân sách tháng"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingBottom="16dp" />
+
+    <!-- Ô nhập hạn mức (Material TextInputLayout + TextInputEditText) -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilLimit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Hạn mức chi tiêu (đ)"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        app:boxStrokeWidth="1dp"
+        app:boxStrokeWidthFocused="2dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edtLimit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="number"
+            android:minHeight="48dp" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Nút lưu ngân sách -->
+    <Button
+        android:id="@+id/btnSaveBudget"
+        android:text="Lưu ngân sách"
+        android:layout_marginTop="12dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <!-- Hiển thị tổng đã chi -->
+    <TextView
+        android:id="@+id/txtSpent"
+        android:text="Đã chi: 0 đ"
+        android:layout_marginTop="20dp"
+        android:textSize="16sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <!-- Hiển thị trạng thái ngân sách -->
+    <TextView
+        android:id="@+id/txtStatus"
+        android:text="Trạng thái: Chưa vượt ngân sách"
+        android:layout_marginTop="8dp"
+        android:textSize="16sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+</LinearLayout>
