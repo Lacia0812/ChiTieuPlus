@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Tab 1: Danh sách chi tiêu -->
+    <item
+        android:id="@+id/transactionListFragment"
+        android:icon="@android:drawable/ic_menu_agenda"
+        android:title="Chi tiêu" />
+
+    <!-- Tab 2: Thống kê -->
+    <item
+        android:id="@+id/statsFragment"
+        android:icon="@android:drawable/ic_menu_sort_by_size"
+        android:title="Thống kê" />
+
+    <!-- Tab 3: Ngân sách -->
+    <item
+        android:id="@+id/budgetFragment"
+        android:icon="@android:drawable/ic_menu_manage"
+        android:title="Ngân sách" />
+
+</menu>

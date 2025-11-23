@@ -4,48 +4,42 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    tools:context=".ui.main.MainActivity">
 
+    <!-- Thanh AppBar phía trên cùng -->
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <!-- Spacer đẩy Toolbar xuống cho thoáng -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/status_bar_padding" />
-
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
-            style="@style/Widget.Material3.Toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:paddingStart="0dp"
-            android:paddingEnd="0dp"
-            android:contentInsetStartWithNavigation="0dp">
+            app:popupTheme="@style/ThemeOverlay.MaterialComponents.Light"
+            app:title=""
+            tools:title="ChiTieuPlus" />
 
-            <!-- Logo ở bên trái, cao ngang chữ trước đây -->
-            <ImageView
-                android:id="@+id/imgLogo"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_gravity="start|center_vertical"
-                android:adjustViewBounds="true"
-                android:scaleType="fitCenter"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:contentDescription="@string/app_name"
-                android:src="@drawable/logo"/>
-        </com.google.android.material.appbar.MaterialToolbar>
     </com.google.android.material.appbar.AppBarLayout>
 
+    <!-- NavHostFragment để chứa các Fragment -->
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/nav_host"
         android:name="androidx.navigation.fragment.NavHostFragment"
-        app:defaultNavHost="true"
-        app:navGraph="@navigation/nav_graph"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        app:defaultNavHost="true"
+        app:navGraph="@navigation/nav_graph"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         tools:layout="@layout/fragment_transaction_list" />
+
+    <!-- 🔥 Thanh Bottom Navigation ở dưới cùng màn hình -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottom_nav"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="?android:attr/windowBackground"
+        app:menu="@menu/menu_bottom_nav" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
