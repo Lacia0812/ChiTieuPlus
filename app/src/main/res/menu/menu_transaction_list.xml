@@ -2,8 +2,18 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <!-- Xuất CSV -->
     <item
         android:id="@+id/action_export_csv"
         android:title="Xuất CSV"
+        android:icon="@android:drawable/ic_menu_save"
         app:showAsAction="never" />
+
+    <!-- Đổi tên hiển thị -->
+    <item
+        android:id="@+id/action_change_name"
+        android:title="Đổi tên"
+        android:icon="@android:drawable/ic_menu_edit"
+        app:showAsAction="never" />
+
 </menu>

@@ -3,9 +3,11 @@ package com.example.chitieuplus.ui.list
 import android.app.Activity
 import android.app.DatePickerDialog
 import android.content.Intent
+import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.view.*
+import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.SearchView
@@ -13,6 +15,7 @@ import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -24,9 +27,14 @@ import com.example.chitieuplus.data.AppDatabase
 import com.example.chitieuplus.data.TransactionEntity
 import com.example.chitieuplus.databinding.FragmentTransactionListBinding
 import com.example.chitieuplus.viewmodel.TransactionViewModel
+import com.example.chitieuplus.viewmodel.BudgetViewModel
+import com.example.chitieuplus.viewmodel.BudgetViewModelFactory
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -41,12 +49,22 @@ class TransactionListFragment : Fragment() {
 
     private val vm: TransactionViewModel by activityViewModels()
 
+    private val budgetViewModel: BudgetViewModel by viewModels {
+        BudgetViewModelFactory(requireContext().applicationContext)
+    }
+
     private val adapter = TransactionAdapter { item ->
         findNavController().navigate(
             R.id.action_list_to_edit,
             Bundle().apply { putInt("id", item.id) }
         )
     }
+
+    // ====== SUMMARY HEADER STATE ======
+    private var currentBudgetLimit: Long = 0L
+    private var latestIncome: Long = 0L
+    private var latestExpense: Long = 0L
+    private val moneyFmt: NumberFormat = NumberFormat.getInstance(Locale("vi", "VN"))
 
     // ====== Date filter ======
     private var fromDay: Long? = null
@@ -75,13 +93,24 @@ class TransactionListFragment : Fragment() {
 
         _vb = FragmentTransactionListBinding.inflate(inflater, container, false)
 
+        // Header tổng quan: xin chào, số dư, chi tiêu, hôm nay
+        setupSummaryHeader()
+
         // RecyclerView
         vb.rv.layoutManager = LinearLayoutManager(requireContext())
         vb.rv.adapter = adapter
 
         // Swipe delete
-        val swipe = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
-            override fun onMove(rv: RecyclerView, vh: RecyclerView.ViewHolder, t: RecyclerView.ViewHolder) = false
+        val swipe = object : ItemTouchHelper.SimpleCallback(
+            0,
+            ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+        ) {
+            override fun onMove(
+                rv: RecyclerView,
+                vh: RecyclerView.ViewHolder,
+                t: RecyclerView.ViewHolder
+            ) = false
+
             override fun onSwiped(vh: RecyclerView.ViewHolder, dir: Int) {
                 val pos = vh.bindingAdapterPosition
                 if (pos != RecyclerView.NO_POSITION) {
@@ -92,7 +121,7 @@ class TransactionListFragment : Fragment() {
         }
         ItemTouchHelper(swipe).attachToRecyclerView(vb.rv)
 
-        // FAB
+        // FAB thêm giao dịch
         vb.fabAdd.setOnClickListener {
             findNavController().navigate(R.id.action_list_to_edit)
         }
@@ -103,13 +132,18 @@ class TransactionListFragment : Fragment() {
             }
         })
 
-        // Observe list
+        // Observe list giao dịch
         vm.items.observe(viewLifecycleOwner) { list ->
             if (!isFiltering()) {
                 baseList = list
-                if (currentKeyword.isBlank()) adapter.submit(list)
-                else renderFilteredAndSearched()
+                if (currentKeyword.isBlank()) {
+                    adapter.submit(list)
+                } else {
+                    renderFilteredAndSearched()
+                }
             }
+            // Cập nhật phần "Hôm nay" = thu - chi hôm nay
+            updateTodayFromTransactions(list)
         }
 
         // MENU
@@ -120,7 +154,7 @@ class TransactionListFragment : Fragment() {
                 // Menu gốc
                 menuInflater.inflate(R.menu.menu_list, menu)
 
-                // ⭐ Thêm menu xuất CSV
+                // Menu phụ cho danh sách giao dịch (export, đổi tên,...)
                 menuInflater.inflate(R.menu.menu_transaction_list, menu)
 
                 // Lọc ngày
@@ -155,23 +189,159 @@ class TransactionListFragment : Fragment() {
                         true
                     }
 
+                    // Đổi tên hiển thị
+                    R.id.action_change_name -> {
+                        showChangeNameDialog(isFirstTime = false)
+                        true
+                    }
+
                     R.id.action_stats -> {
-                        findNavController().navigate(R.id.action_list_to_stats); true
+                        findNavController().navigate(R.id.action_list_to_stats)
+                        true
                     }
                     R.id.action_manage_categories -> {
-                        findNavController().navigate(R.id.categoryManagerFragment); true
+                        findNavController().navigate(R.id.categoryManagerFragment)
+                        true
                     }
                     R.id.action_budget -> {
-                        findNavController().navigate(R.id.action_list_to_budget); true
+                        findNavController().navigate(R.id.action_list_to_budget)
+                        true
                     }
-                    ID_FILTER_DATE -> { pickDateRange(); true }
-                    ID_CLEAR_FILTER -> { clearDateFilter(); true }
+                    ID_FILTER_DATE -> {
+                        pickDateRange()
+                        true
+                    }
+                    ID_CLEAR_FILTER -> {
+                        clearDateFilter()
+                        true
+                    }
                     else -> false
                 }
             }
         }, viewLifecycleOwner, Lifecycle.State.RESUMED)
 
         return vb.root
+    }
+
+    // ====================== SUMMARY HEADER LOGIC ======================
+    private fun setupSummaryHeader() {
+        val prefs = requireContext().getSharedPreferences("chitieu_prefs", Context.MODE_PRIVATE)
+        val hasName = prefs.contains("user_name")
+        val userName = prefs.getString("user_name", "bạn") ?: "bạn"
+
+        vb.tvUserName.text = userName
+
+        // Nếu lần đầu chưa có tên -> hiện dialog hỏi tên
+        if (!hasName) {
+            vb.tvUserName.post {
+                showChangeNameDialog(isFirstTime = true)
+            }
+        }
+
+        // Quan sát ngân sách hiện tại (limitAmount)
+        viewLifecycleOwner.lifecycleScope.launch {
+            budgetViewModel.uiState.collectLatest { state ->
+                currentBudgetLimit = state.limitAmount
+                updateSummaryFromData()
+            }
+        }
+
+        // Quan sát tổng thu
+        vm.totalIncome.observe(viewLifecycleOwner) { income ->
+            latestIncome = income ?: 0L
+            updateSummaryFromData()
+        }
+
+        // Quan sát tổng chi
+        vm.totalExpense.observe(viewLifecycleOwner) { expense ->
+            latestExpense = expense ?: 0L
+            updateSummaryFromData()
+        }
+
+        // Yêu cầu ViewModel ngân sách load dữ liệu hiện tại
+        budgetViewModel.loadBudget()
+    }
+
+    // Dialog đổi tên / nhập tên lần đầu
+    private fun showChangeNameDialog(isFirstTime: Boolean) {
+        if (!isAdded) return
+
+        val prefs = requireContext().getSharedPreferences("chitieu_prefs", Context.MODE_PRIVATE)
+        val currentName = prefs.getString("user_name", "") ?: ""
+
+        val input = EditText(requireContext()).apply {
+            hint = "Nhập tên của bạn"
+            setText(currentName)
+            setSelection(text.length)
+        }
+
+        val title = if (isFirstTime) "Chào mừng bạn!" else "Đổi tên hiển thị"
+        val message = if (isFirstTime) {
+            "Nhập tên của bạn."
+        } else {
+            "Bạn muốn đổi tên gì ?"
+        }
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(title)
+            .setMessage(message)
+            .setView(input)
+            .setPositiveButton("Lưu") { dialog, _ ->
+                val name = input.text.toString().trim()
+                if (name.isNotEmpty()) {
+                    prefs.edit().putString("user_name", name).apply()
+                    vb.tvUserName.text = name
+                }
+                dialog.dismiss()
+            }
+            .setNegativeButton("Hủy") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .setCancelable(!isFirstTime)
+            .show()
+    }
+
+    // Cập nhật số dư và "Chi tháng này" lên header
+    // Chi tháng này = số dư (ngân sách) + tổng thu - tổng chi
+    private fun updateSummaryFromData() {
+        vb.tvTotalBalance.text = moneyFmt.format(currentBudgetLimit) + " đ"
+
+        val chiTieu = currentBudgetLimit + latestIncome - latestExpense
+        vb.tvThisMonthAmount.text = moneyFmt.format(chiTieu) + " đ"
+    }
+
+    // Cập nhật "Hôm nay" = tổng thu hôm nay - tổng chi hôm nay
+    private fun updateTodayFromTransactions(list: List<TransactionEntity>) {
+        if (!isAdded) return
+
+        val cal = Calendar.getInstance()
+        cal.set(Calendar.HOUR_OF_DAY, 0)
+        cal.set(Calendar.MINUTE, 0)
+        cal.set(Calendar.SECOND, 0)
+        cal.set(Calendar.MILLISECOND, 0)
+        val start = cal.timeInMillis
+
+        cal.set(Calendar.HOUR_OF_DAY, 23)
+        cal.set(Calendar.MINUTE, 59)
+        cal.set(Calendar.SECOND, 59)
+        cal.set(Calendar.MILLISECOND, 999)
+        val end = cal.timeInMillis
+
+        var incomeToday = 0L
+        var expenseToday = 0L
+
+        for (t in list) {
+            if (t.date in start..end) {
+                if (t.type.name == "INCOME") {
+                    incomeToday += t.amount
+                } else {
+                    expenseToday += t.amount
+                }
+            }
+        }
+
+        val netToday = incomeToday - expenseToday
+        vb.tvTodayAmount.text = moneyFmt.format(netToday) + " đ"
     }
 
     // ====================== SEARCH ======================
@@ -218,7 +388,11 @@ class TransactionListFragment : Fragment() {
             renderFilteredAndSearched()
         }
 
-        Toast.makeText(requireContext(), "Lọc: ${fmtDate(from)} – ${fmtDate(to)}", Toast.LENGTH_SHORT).show()
+        Toast.makeText(
+            requireContext(),
+            "Lọc: ${fmtDate(from)} – ${fmtDate(to)}",
+            Toast.LENGTH_SHORT
+        ).show()
     }
 
     private fun clearDateFilter() {
@@ -236,7 +410,10 @@ class TransactionListFragment : Fragment() {
         Calendar.getInstance().apply { set(y, m, d, 0, 0, 0) }.timeInMillis
 
     private fun endOfDayMillis(y: Int, m: Int, d: Int): Long =
-        Calendar.getInstance().apply { set(y, m, d, 23, 59, 59) }.timeInMillis
+        Calendar.getInstance().apply {
+            set(y, m, d, 23, 59, 59)      // 6 tham số hợp lệ
+            set(Calendar.MILLISECOND, 999) // set millis riêng
+        }.timeInMillis
 
     private fun fmtDate(millis: Long): String {
         val c = Calendar.getInstance().apply { timeInMillis = millis }
@@ -292,7 +469,11 @@ class TransactionListFragment : Fragment() {
             }
 
             withContext(Dispatchers.Main) {
-                Toast.makeText(requireContext(), "Xuất CSV thành công!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Xuất CSV thành công!",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
