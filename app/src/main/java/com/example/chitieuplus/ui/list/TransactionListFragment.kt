@@ -2,8 +2,8 @@ package com.example.chitieuplus.ui.list
 
 import android.app.Activity
 import android.app.DatePickerDialog
-import android.content.Intent
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.*
@@ -26,9 +26,9 @@ import com.example.chitieuplus.R
 import com.example.chitieuplus.data.AppDatabase
 import com.example.chitieuplus.data.TransactionEntity
 import com.example.chitieuplus.databinding.FragmentTransactionListBinding
-import com.example.chitieuplus.viewmodel.TransactionViewModel
 import com.example.chitieuplus.viewmodel.BudgetViewModel
 import com.example.chitieuplus.viewmodel.BudgetViewModelFactory
+import com.example.chitieuplus.viewmodel.TransactionViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
@@ -93,7 +93,7 @@ class TransactionListFragment : Fragment() {
 
         _vb = FragmentTransactionListBinding.inflate(inflater, container, false)
 
-        // Header tổng quan: xin chào, số dư, chi tháng này, thu tháng này, hôm nay
+        // Header tổng quan
         setupSummaryHeader()
 
         // RecyclerView
@@ -142,7 +142,7 @@ class TransactionListFragment : Fragment() {
                     renderFilteredAndSearched()
                 }
             }
-            // Cập nhật Today / Chi tháng này / Thu tháng này từ danh sách
+            // Cập nhật Today / Thu & Chi tháng này
             updateTodayFromTransactions(list)
             updateThisMonthFromTransactions(list)
         }
@@ -152,14 +152,14 @@ class TransactionListFragment : Fragment() {
         menuHost.addMenuProvider(object : MenuProvider {
             override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
 
-                // Menu gốc (có search, stats, budget,...)
+                // Menu gốc
                 menuInflater.inflate(R.menu.menu_list, menu)
 
-                // Bỏ "Thống kê" và "Ngân sách" khỏi nút 3 chấm (đã có ở bottom nav)
+                // Bỏ Thống kê & Ngân sách (đã có ở bottom nav)
                 menu.removeItem(R.id.action_stats)
                 menu.removeItem(R.id.action_budget)
 
-                // Menu phụ cho danh sách giao dịch (export, đổi tên,...)
+                // Menu phụ
                 menuInflater.inflate(R.menu.menu_transaction_list, menu)
 
                 // Lọc ngày
@@ -200,14 +200,22 @@ class TransactionListFragment : Fragment() {
                         true
                     }
 
+                    // ✅ Quản lý danh mục (THÊM LẠI CASE NÀY)
+                    R.id.action_manage_categories -> {
+                        findNavController().navigate(R.id.categoryManagerFragment)
+                        true
+                    }
+
                     ID_FILTER_DATE -> {
                         pickDateRange()
                         true
                     }
+
                     ID_CLEAR_FILTER -> {
                         clearDateFilter()
                         true
                     }
+
                     else -> false
                 }
             }
@@ -224,14 +232,12 @@ class TransactionListFragment : Fragment() {
 
         vb.tvUserName.text = userName
 
-        // Nếu lần đầu chưa có tên -> hiện dialog hỏi tên
         if (!hasName) {
             vb.tvUserName.post {
                 showChangeNameDialog(isFirstTime = true)
             }
         }
 
-        // Quan sát ngân sách hiện tại (limitAmount) để hiển thị SỐ DƯ
         viewLifecycleOwner.lifecycleScope.launch {
             budgetViewModel.uiState.collectLatest { state ->
                 currentBudgetLimit = state.limitAmount
@@ -239,7 +245,6 @@ class TransactionListFragment : Fragment() {
             }
         }
 
-        // Quan sát tổng thu / chi (giữ lại để sau nếu bạn dùng chỗ khác)
         vm.totalIncome.observe(viewLifecycleOwner) { income ->
             latestIncome = income ?: 0L
         }
@@ -248,11 +253,9 @@ class TransactionListFragment : Fragment() {
             latestExpense = expense ?: 0L
         }
 
-        // Yêu cầu ViewModel ngân sách load dữ liệu hiện tại
         budgetViewModel.loadBudget()
     }
 
-    // Dialog đổi tên / nhập tên lần đầu
     private fun showChangeNameDialog(isFirstTime: Boolean) {
         if (!isAdded) return
 
@@ -291,20 +294,17 @@ class TransactionListFragment : Fragment() {
             .show()
     }
 
-    // Cập nhật SỐ DƯ (ngân sách người dùng nhập)
     private fun updateSummaryFromData() {
         vb.tvTotalBalance.text = moneyFmt.format(currentBudgetLimit) + " đ"
-        // "Chi tháng này" và "Thu tháng này" được tính riêng trong updateThisMonthFromTransactions()
     }
 
-    // "Chi tháng này" = tổng CHI trong tháng hiện tại
-    // "Thu tháng này" = tổng THU trong tháng hiện tại
+    // Thu & Chi tháng này
     private fun updateThisMonthFromTransactions(list: List<TransactionEntity>) {
         if (!isAdded) return
 
         val cal = Calendar.getInstance()
         val currentYear = cal[Calendar.YEAR]
-        val currentMonth = cal[Calendar.MONTH] // 0-11
+        val currentMonth = cal[Calendar.MONTH]
 
         var expenseThisMonth = 0L
         var incomeThisMonth = 0L
@@ -322,11 +322,11 @@ class TransactionListFragment : Fragment() {
             }
         }
 
-        vb.tvThisMonthAmount.text =  moneyFmt.format(expenseThisMonth) + " đ"
-        vb.tvThisMonthIncomeAmount.text =  moneyFmt.format(incomeThisMonth) + " đ"
+        vb.tvThisMonthAmount.text = moneyFmt.format(expenseThisMonth) + " đ"
+        vb.tvThisMonthIncomeAmount.text = "+ " + moneyFmt.format(incomeThisMonth) + " đ"
     }
 
-    // "Hôm nay" = tổng thu hôm nay - tổng chi hôm nay
+    // Hôm nay = thu hôm nay - chi hôm nay
     private fun updateTodayFromTransactions(list: List<TransactionEntity>) {
         if (!isAdded) return
 
@@ -360,7 +360,7 @@ class TransactionListFragment : Fragment() {
         vb.tvTodayAmount.text = moneyFmt.format(netToday) + " đ"
     }
 
-    // ====================== SEARCH ======================
+    // ====================== SEARCH & FILTER ======================
     private fun applySearch(q: String) {
         if (!isFiltering()) {
             if (q.isBlank()) vm.items.observe(viewLifecycleOwner) { adapter.submit(it) }
@@ -379,7 +379,6 @@ class TransactionListFragment : Fragment() {
         adapter.submit(filtered)
     }
 
-    // ====================== DATE FILTER ======================
     private fun pickDateRange() {
         val cal = Calendar.getInstance()
         DatePickerDialog(requireContext(), { _, y, m, d ->

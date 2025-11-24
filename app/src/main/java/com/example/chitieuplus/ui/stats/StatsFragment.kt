@@ -25,7 +25,7 @@ class StatsFragment : Fragment() {
 
     private val vm: TransactionViewModel by viewModels()
 
-    // state lọc ngày (epochMillis bắt đầu/kết thúc, null = không lọc)
+    // state lọc ngày
     private var fromDay: Long? = null
     private var toDay: Long? = null
 
@@ -38,7 +38,8 @@ class StatsFragment : Fragment() {
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         _vb = FragmentStatsBinding.inflate(inflater, container, false)
@@ -46,7 +47,7 @@ class StatsFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        // Quan sát "tổng hệ thống" (dùng khi KHÔNG lọc ngày)
+        // Quan sát tổng hệ thống (khi KHÔNG lọc ngày)
         vm.totalIncome.observe(viewLifecycleOwner) {
             if (!isFiltering()) {
                 vb.tvIncome.text = "Tổng thu: ${formatVnd((it ?: 0))}"
@@ -61,12 +62,13 @@ class StatsFragment : Fragment() {
             }
         }
 
-        // Danh mục chi nổi bật lấy từ danh sách hiện hành:
-        // - nếu lọc: từ filteredItems
-        // - nếu không lọc: từ vm.items
+        // Danh mục chi nổi bật + biểu đồ cột 3 tháng từ danh sách hiện hành
+        // - nếu lọc: dùng filteredItems
+        // - nếu không lọc: dùng vm.items
         vm.items.observe(viewLifecycleOwner) { list ->
             if (!isFiltering()) {
                 renderTopExpenseCategories(list)
+                updateBarChartFromList(list)
             }
         }
 
@@ -93,9 +95,10 @@ class StatsFragment : Fragment() {
                     set(Calendar.SECOND, 0)
                     set(Calendar.MILLISECOND, 0)
                 }.timeInMillis
+
                 if (isFrom) {
                     fromDay = millis
-                    // nếu chưa có toDay -> mặc định toDay = fromDay cuối ngày
+                    // Nếu chưa có toDay -> mặc định cuối ngày fromDay
                     if (toDay == null) {
                         toDay = endOfDayMillis(millis)
                     }
@@ -139,14 +142,13 @@ class StatsFragment : Fragment() {
             vb.tvIncome.text = "Tổng thu: ${formatVnd(income)}"
             vb.tvExpense.text = "Tổng chi: ${formatVnd(-expenseAbs)}"
             renderTopExpenseCategories(list)
+            updateBarChartFromList(list)
             showRangeLabel(from, to)
             updateUI(incomeOverride = income, expenseAbsOverride = expenseAbs)
         }
     }
 
-    /** Cập nhật số dư + % + biểu đồ.
-     *  Nếu truyền income/expenseAbs override (lọc) thì dùng; nếu không -> dùng tổng hệ thống.
-     */
+    /** Cập nhật số dư + % + biểu đồ tròn. */
     private fun updateUI(
         incomeOverride: Long? = null,
         expenseAbsOverride: Long? = null
@@ -179,6 +181,61 @@ class StatsFragment : Fragment() {
         vb.progressExpense.setProgress(expensePct, true)
         vb.tvIncomePct.text = "Thu: $incomePct%"
         vb.tvExpensePct.text = "Chi: $expensePct%"
+    }
+
+    /** Cập nhật biểu đồ cột 3 tháng gần nhất */
+    private fun updateBarChartFromList(list: List<TransactionEntity>) {
+        if (!isAdded) return
+
+        if (list.isEmpty()) {
+            vb.bar3Months.setData(emptyList(), emptyList(), emptyList())
+            return
+        }
+
+        val now = Calendar.getInstance()
+        val months = mutableListOf<Pair<Int, Int>>() // (year, monthIndex)
+        repeat(3) {
+            val year = now.get(Calendar.YEAR)
+            val month = now.get(Calendar.MONTH)
+            // thêm vào đầu để thứ tự: 2 tháng trước - 1 tháng trước - hiện tại
+            months.add(0, year to month)
+            now.add(Calendar.MONTH, -1)
+        }
+
+        val grouped = list.groupBy { txn ->
+            val c = Calendar.getInstance()
+            c.timeInMillis = txn.date
+            c.get(Calendar.YEAR) to c.get(Calendar.MONTH)
+        }
+
+        val labels = mutableListOf<String>()
+        val incomes = mutableListOf<Long>()
+        val expenses = mutableListOf<Long>()
+
+        months.forEach { (year, month) ->
+            val items = grouped[year to month] ?: emptyList()
+            val income = items
+                .filter { it.type == TransactionType.INCOME }
+                .sumOf { it.amount }
+                .coerceAtLeast(0)
+            val expenseAbs = abs(
+                items.filter { it.type == TransactionType.EXPENSE }
+                    .sumOf { it.amount }
+            )
+
+            val label = String.format(
+                Locale("vi", "VN"),
+                "%02d/%02d",
+                month + 1,
+                year % 100
+            )
+
+            labels.add(label)
+            incomes.add(income)
+            expenses.add(expenseAbs)
+        }
+
+        vb.bar3Months.setData(labels, incomes, expenses)
     }
 
     /** Render top danh mục CHI từ list hiện hành */
@@ -220,10 +277,6 @@ class StatsFragment : Fragment() {
     /** MENU (Share + Clear filter + Budget) */
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.menu_stats, menu)
-        // nếu menu_stats.xml đã có action_budget thì đoạn này có thể bỏ, còn không thì thêm dynamic:
-        // menu.add(0, R.id.action_budget, 2, "Ngân sách")
-        //     .setIcon(android.R.drawable.ic_menu_manage)
-        //     .setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -251,7 +304,10 @@ class StatsFragment : Fragment() {
                 filteredItems = null
                 showRangeLabel()
                 // reset hiển thị theo “tổng hệ thống”
-                vm.items.value?.let { renderTopExpenseCategories(it) }
+                vm.items.value?.let {
+                    renderTopExpenseCategories(it)
+                    updateBarChartFromList(it)
+                }
                 updateUI()
                 true
             }

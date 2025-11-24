@@ -18,7 +18,8 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
             app:cardUseCompatPadding="true"
-            app:cardCornerRadius="20dp">
+            app:cardCornerRadius="20dp"
+            app:cardElevation="4dp">
 
             <LinearLayout
                 android:orientation="vertical"
@@ -31,6 +32,7 @@
                     android:text="Tổng quan"
                     android:textStyle="bold"
                     android:textSize="18sp"
+                    android:textColor="@android:color/black"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
 
@@ -38,6 +40,7 @@
                     android:id="@+id/tvIncome"
                     android:text="Tổng thu: 0 ₫"
                     android:textStyle="bold"
+                    android:textColor="@android:color/holo_green_dark"
                     android:layout_marginTop="8dp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
@@ -46,6 +49,7 @@
                     android:id="@+id/tvExpense"
                     android:text="Tổng chi: 0 ₫"
                     android:textStyle="bold"
+                    android:textColor="@android:color/holo_red_dark"
                     android:layout_marginTop="4dp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
@@ -54,57 +58,21 @@
                     android:id="@+id/tvBalance"
                     android:text="Còn lại: 0 ₫"
                     android:textStyle="bold"
+                    android:textColor="@android:color/black"
                     android:layout_marginTop="4dp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Bộ lọc theo khoảng ngày -->
-        <LinearLayout
-            android:id="@+id/filterContainer"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp">
-
-            <Button
-                android:id="@+id/btnFrom"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Từ ngày" />
-
-            <View
-                android:layout_width="8dp"
-                android:layout_height="1dp" />
-
-            <Button
-                android:id="@+id/btnTo"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Đến ngày" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/tvRange"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="(Không lọc theo ngày)"
-            android:textStyle="italic"
-            android:textColor="@android:color/darker_gray"
-            android:gravity="center"
-            android:layout_marginBottom="12dp"/>
-
-        <!-- Card Tỷ trọng Thu / Chi -->
+        <!-- Card lọc thời gian -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
             app:cardUseCompatPadding="true"
-            app:cardCornerRadius="20dp">
+            app:cardCornerRadius="20dp"
+            app:cardElevation="4dp">
 
             <LinearLayout
                 android:orientation="vertical"
@@ -113,16 +81,86 @@
                 android:layout_height="wrap_content">
 
                 <TextView
-                    android:text="Tỷ trọng Thu/Chi"
+                    android:text="Khoảng thời gian"
                     android:textStyle="bold"
                     android:textSize="16sp"
+                    android:textColor="@android:color/black"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
+
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginBottom="8dp">
+
+                    <Button
+                        android:id="@+id/btnFrom"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Từ ngày" />
+
+                    <View
+                        android:layout_width="8dp"
+                        android:layout_height="0dp" />
+
+                    <Button
+                        android:id="@+id/btnTo"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Đến ngày" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvRange"
+                    android:text="(Không lọc theo ngày)"
+                    android:textSize="14sp"
+                    android:textColor="@android:color/darker_gray"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Card biểu đồ tròn -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardUseCompatPadding="true"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:gravity="center_horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:text="Tỷ trọng Thu / Chi"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:textColor="@android:color/black"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <com.example.chitieuplus.ui.stats.PieView
+                    android:id="@+id/pieView"
+                    android:layout_width="match_parent"
+                    android:layout_height="220dp"
+                    android:layout_marginTop="12dp" />
 
                 <TextView
                     android:id="@+id/tvIncomePct"
                     android:text="Thu: 0%"
-                    android:layout_marginTop="8dp"
+                    android:textSize="14sp"
+                    android:textColor="@android:color/holo_green_dark"
+                    android:layout_marginTop="12dp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
 
@@ -136,6 +174,8 @@
                 <TextView
                     android:id="@+id/tvExpensePct"
                     android:text="Chi: 0%"
+                    android:textSize="14sp"
+                    android:textColor="@android:color/holo_red_dark"
                     android:layout_marginTop="12dp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
@@ -146,26 +186,48 @@
                     android:layout_height="wrap_content"
                     android:max="100"
                     android:progress="0" />
-
-                <!-- Biểu đồ tròn -->
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="16dp" />
-
-                <com.example.chitieuplus.ui.stats.PieView
-                    android:id="@+id/pieView"
-                    android:layout_width="match_parent"
-                    android:layout_height="220dp"
-                    android:layout_marginTop="8dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Card Top danh mục chi -->
+        <!-- Card biểu đồ cột 3 tháng gần nhất -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardUseCompatPadding="true"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:gravity="center_horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:text="Thu - Chi 3 tháng gần nhất"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:textColor="@android:color/black"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <com.example.chitieuplus.ui.stats.ThreeMonthsBarView
+                    android:id="@+id/bar3Months"
+                    android:layout_width="match_parent"
+                    android:layout_height="220dp"
+                    android:layout_marginTop="12dp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Card top danh mục chi -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:cardUseCompatPadding="true"
-            app:cardCornerRadius="20dp">
+            app:cardCornerRadius="20dp"
+            app:cardElevation="4dp">
 
             <LinearLayout
                 android:orientation="vertical"
@@ -174,9 +236,11 @@
                 android:layout_height="wrap_content">
 
                 <TextView
-                    android:text="Danh mục chi nổi bật"
+                    android:id="@+id/tvTopCategoriesTitle"
+                    android:text="Top danh mục chi tiêu"
                     android:textStyle="bold"
                     android:textSize="16sp"
+                    android:textColor="@android:color/black"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
 
@@ -185,7 +249,7 @@
                     android:orientation="vertical"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"/>
+                    android:layout_marginTop="8dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
