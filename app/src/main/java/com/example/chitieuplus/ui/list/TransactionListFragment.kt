@@ -93,7 +93,7 @@ class TransactionListFragment : Fragment() {
 
         _vb = FragmentTransactionListBinding.inflate(inflater, container, false)
 
-        // Header tổng quan: xin chào, số dư, chi tiêu, hôm nay
+        // Header tổng quan: xin chào, số dư, chi tháng này, thu tháng này, hôm nay
         setupSummaryHeader()
 
         // RecyclerView
@@ -142,8 +142,9 @@ class TransactionListFragment : Fragment() {
                     renderFilteredAndSearched()
                 }
             }
-            // Cập nhật phần "Hôm nay" = thu - chi hôm nay
+            // Cập nhật Today / Chi tháng này / Thu tháng này từ danh sách
             updateTodayFromTransactions(list)
+            updateThisMonthFromTransactions(list)
         }
 
         // MENU
@@ -151,8 +152,12 @@ class TransactionListFragment : Fragment() {
         menuHost.addMenuProvider(object : MenuProvider {
             override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
 
-                // Menu gốc
+                // Menu gốc (có search, stats, budget,...)
                 menuInflater.inflate(R.menu.menu_list, menu)
+
+                // Bỏ "Thống kê" và "Ngân sách" khỏi nút 3 chấm (đã có ở bottom nav)
+                menu.removeItem(R.id.action_stats)
+                menu.removeItem(R.id.action_budget)
 
                 // Menu phụ cho danh sách giao dịch (export, đổi tên,...)
                 menuInflater.inflate(R.menu.menu_transaction_list, menu)
@@ -195,18 +200,6 @@ class TransactionListFragment : Fragment() {
                         true
                     }
 
-                    R.id.action_stats -> {
-                        findNavController().navigate(R.id.action_list_to_stats)
-                        true
-                    }
-                    R.id.action_manage_categories -> {
-                        findNavController().navigate(R.id.categoryManagerFragment)
-                        true
-                    }
-                    R.id.action_budget -> {
-                        findNavController().navigate(R.id.action_list_to_budget)
-                        true
-                    }
                     ID_FILTER_DATE -> {
                         pickDateRange()
                         true
@@ -238,7 +231,7 @@ class TransactionListFragment : Fragment() {
             }
         }
 
-        // Quan sát ngân sách hiện tại (limitAmount)
+        // Quan sát ngân sách hiện tại (limitAmount) để hiển thị SỐ DƯ
         viewLifecycleOwner.lifecycleScope.launch {
             budgetViewModel.uiState.collectLatest { state ->
                 currentBudgetLimit = state.limitAmount
@@ -246,16 +239,13 @@ class TransactionListFragment : Fragment() {
             }
         }
 
-        // Quan sát tổng thu
+        // Quan sát tổng thu / chi (giữ lại để sau nếu bạn dùng chỗ khác)
         vm.totalIncome.observe(viewLifecycleOwner) { income ->
             latestIncome = income ?: 0L
-            updateSummaryFromData()
         }
 
-        // Quan sát tổng chi
         vm.totalExpense.observe(viewLifecycleOwner) { expense ->
             latestExpense = expense ?: 0L
-            updateSummaryFromData()
         }
 
         // Yêu cầu ViewModel ngân sách load dữ liệu hiện tại
@@ -279,7 +269,7 @@ class TransactionListFragment : Fragment() {
         val message = if (isFirstTime) {
             "Nhập tên của bạn."
         } else {
-            "Bạn muốn đổi tên gì ?"
+            "Bạn muốn đổi tên gì?"
         }
 
         MaterialAlertDialogBuilder(requireContext())
@@ -301,16 +291,42 @@ class TransactionListFragment : Fragment() {
             .show()
     }
 
-    // Cập nhật số dư và "Chi tháng này" lên header
-    // Chi tháng này = số dư (ngân sách) + tổng thu - tổng chi
+    // Cập nhật SỐ DƯ (ngân sách người dùng nhập)
     private fun updateSummaryFromData() {
         vb.tvTotalBalance.text = moneyFmt.format(currentBudgetLimit) + " đ"
-
-        val chiTieu = currentBudgetLimit + latestIncome - latestExpense
-        vb.tvThisMonthAmount.text = moneyFmt.format(chiTieu) + " đ"
+        // "Chi tháng này" và "Thu tháng này" được tính riêng trong updateThisMonthFromTransactions()
     }
 
-    // Cập nhật "Hôm nay" = tổng thu hôm nay - tổng chi hôm nay
+    // "Chi tháng này" = tổng CHI trong tháng hiện tại
+    // "Thu tháng này" = tổng THU trong tháng hiện tại
+    private fun updateThisMonthFromTransactions(list: List<TransactionEntity>) {
+        if (!isAdded) return
+
+        val cal = Calendar.getInstance()
+        val currentYear = cal[Calendar.YEAR]
+        val currentMonth = cal[Calendar.MONTH] // 0-11
+
+        var expenseThisMonth = 0L
+        var incomeThisMonth = 0L
+
+        for (t in list) {
+            cal.timeInMillis = t.date
+            val y = cal[Calendar.YEAR]
+            val m = cal[Calendar.MONTH]
+            if (y == currentYear && m == currentMonth) {
+                if (t.type.name == "EXPENSE") {
+                    expenseThisMonth += t.amount
+                } else if (t.type.name == "INCOME") {
+                    incomeThisMonth += t.amount
+                }
+            }
+        }
+
+        vb.tvThisMonthAmount.text =  moneyFmt.format(expenseThisMonth) + " đ"
+        vb.tvThisMonthIncomeAmount.text =  moneyFmt.format(incomeThisMonth) + " đ"
+    }
+
+    // "Hôm nay" = tổng thu hôm nay - tổng chi hôm nay
     private fun updateTodayFromTransactions(list: List<TransactionEntity>) {
         if (!isAdded) return
 
@@ -411,8 +427,8 @@ class TransactionListFragment : Fragment() {
 
     private fun endOfDayMillis(y: Int, m: Int, d: Int): Long =
         Calendar.getInstance().apply {
-            set(y, m, d, 23, 59, 59)      // 6 tham số hợp lệ
-            set(Calendar.MILLISECOND, 999) // set millis riêng
+            set(y, m, d, 23, 59, 59)
+            set(Calendar.MILLISECOND, 999)
         }.timeInMillis
 
     private fun fmtDate(millis: Long): String {

@@ -69,24 +69,52 @@
                 android:id="@+id/tvTotalBalance"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="12.500.000 đ"
+                android:text="0 đ"
                 android:textStyle="bold"
                 android:textSize="22sp"
                 android:layout_marginTop="4dp"
                 android:textColor="@android:color/black" />
 
+            <!-- Hàng chỉ số: Thu tháng này - Chi tháng này - Hôm nay (trên cùng một dòng) -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:layout_marginTop="12dp">
 
+                <!-- Cột 1: Thu tháng này -->
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tvThisMonthIncomeLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Thu tháng này"
+                        android:textSize="12sp"
+                        android:textColor="@android:color/darker_gray" />
+
+                    <TextView
+                        android:id="@+id/tvThisMonthIncomeAmount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="+ 0 đ"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@android:color/holo_green_dark" />
+                </LinearLayout>
+
+                <!-- Cột 2: Chi tháng này -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center_horizontal">
 
                     <TextView
                         android:id="@+id/tvThisMonthLabel"
@@ -100,18 +128,19 @@
                         android:id="@+id/tvThisMonthAmount"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="- 3.200.000 đ"
+                        android:text="- 0 đ"
                         android:textSize="14sp"
                         android:textStyle="bold"
                         android:textColor="@android:color/holo_red_dark" />
                 </LinearLayout>
 
+                <!-- Cột 3: Hôm nay -->
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:gravity="end"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:gravity="end">
 
                     <TextView
                         android:id="@+id/tvTodayLabel"
@@ -125,7 +154,7 @@
                         android:id="@+id/tvTodayAmount"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="- 250.000 đ"
+                        android:text="0 đ"
                         android:textSize="14sp"
                         android:textStyle="bold"
                         android:textColor="@android:color/black" />
@@ -161,17 +190,20 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Nút thêm giao dịch: nằm giữa, phía trên thanh bottom nav -->
-    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+    <!-- Nút thêm giao dịch: hình tròn, nằm ngay trên thanh bottom nav (trên icon Thống kê ở giữa) -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabAdd"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/add_transaction"
-        app:icon="@android:drawable/ic_input_add"
-        android:layout_marginBottom="120dp"
-        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="128dp"
+        android:contentDescription="@string/add_transaction"
+        app:backgroundTint="@android:color/holo_purple"
+        app:fabSize="normal"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:srcCompat="@android:drawable/ic_input_add"
+        app:tint="@android:color/white" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
