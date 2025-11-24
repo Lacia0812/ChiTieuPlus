@@ -58,12 +58,15 @@ class EditTransactionFragment : Fragment() {
 
         // ==== SETUP DROPDOWN Category ====
         val actv = vb.etCategory as MaterialAutoCompleteTextView
+        // Không cho gõ tay, chỉ cho chọn trong danh sách
+        actv.keyListener = null
 
         fun bindCategorySuggestions(type: TransactionType) {
             catVM.namesByType(type).observe(viewLifecycleOwner) { names ->
                 val items =
                     if (names.isNullOrEmpty()) listOf(getString(R.string.empty_category)) else names
-                catAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, items)
+                catAdapter =
+                    ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, items)
                 actv.setAdapter(catAdapter)
             }
         }
@@ -72,6 +75,7 @@ class EditTransactionFragment : Fragment() {
             if (vb.rbIncome.isChecked) TransactionType.INCOME else TransactionType.EXPENSE
         bindCategorySuggestions(initialType)
 
+        // Bấm vào ô là xổ dropdown
         actv.setOnClickListener { actv.showDropDown() }
 
         vb.rbIncome.setOnCheckedChangeListener { _, checked ->
@@ -179,7 +183,7 @@ class EditTransactionFragment : Fragment() {
             viewLifecycleOwner.lifecycleScope.launch {
                 if (argId == -1) vm.add(entity) else vm.update(entity)
 
-                // 🔔 🔔 CALL BUDGET SERVICE AFTER SAVING TRANSACTION 🔔 🔔
+                // 🔔 Sau khi lưu giao dịch thì gọi service kiểm tra ngân sách
                 val intent = Intent(requireContext(), BudgetAlertService::class.java)
                 requireContext().startService(intent)
 
