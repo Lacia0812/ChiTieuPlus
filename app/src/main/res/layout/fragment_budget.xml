@@ -1,64 +1,151 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<androidx.core.widget.NestedScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical"
-    android:padding="16dp"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:fillViewport="true">
 
-    <!-- Tiêu đề màn hình -->
-    <TextView
-        android:id="@+id/txtBudgetTitle"
-        android:text="Quản lý ngân sách tháng"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:paddingBottom="16dp" />
-
-    <!-- Ô nhập hạn mức (Material TextInputLayout + TextInputEditText) -->
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/tilLimit"
+    <LinearLayout
+        android:orientation="vertical"
+        android:padding="16dp"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Hạn mức chi tiêu (đ)"
-        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-        app:boxStrokeWidth="1dp"
-        app:boxStrokeWidthFocused="2dp">
+        android:layout_height="wrap_content">
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/edtLimit"
+        <!-- Card tóm tắt ngân sách -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="number"
-            android:minHeight="48dp" />
-    </com.google.android.material.textfield.TextInputLayout>
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="20dp"
+            app:cardUseCompatPadding="true"
+            app:cardElevation="4dp">
 
-    <!-- Nút lưu ngân sách -->
-    <Button
-        android:id="@+id/btnSaveBudget"
-        android:text="Lưu ngân sách"
-        android:layout_marginTop="12dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+            <LinearLayout
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
-    <!-- Hiển thị tổng đã chi -->
-    <TextView
-        android:id="@+id/txtSpent"
-        android:text="Đã chi: 0 đ"
-        android:layout_marginTop="20dp"
-        android:textSize="16sp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+                <!-- Tiêu đề -->
+                <TextView
+                    android:id="@+id/txtBudgetTitle"
+                    android:text="Ngân sách tháng này"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/black"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
 
-    <!-- Hiển thị trạng thái ngân sách -->
-    <TextView
-        android:id="@+id/txtStatus"
-        android:text="Trạng thái: Chưa vượt ngân sách"
-        android:layout_marginTop="8dp"
-        android:textSize="16sp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+                <!-- Hạn mức -->
+                <TextView
+                    android:id="@+id/txtLimitValue"
+                    android:text="Hạn mức: 0 đ"
+                    android:textSize="16sp"
+                    android:layout_marginTop="12dp"
+                    android:textColor="@android:color/holo_purple"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
 
-</LinearLayout>
+                <!-- Đã chi -->
+                <TextView
+                    android:id="@+id/txtSpent"
+                    android:text="Đã chi: 0 đ"
+                    android:textSize="16sp"
+                    android:layout_marginTop="4dp"
+                    android:textColor="@android:color/holo_red_dark"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <!-- Còn lại -->
+                <TextView
+                    android:id="@+id/txtRemaining"
+                    android:text="Còn lại: -"
+                    android:textSize="16sp"
+                    android:layout_marginTop="4dp"
+                    android:textColor="@android:color/black"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <!-- Progress ngân sách -->
+                <com.google.android.material.progressindicator.LinearProgressIndicator
+                    android:id="@+id/progressBudget"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:max="100"
+                    android:progress="0" />
+
+                <!-- Trạng thái -->
+                <TextView
+                    android:id="@+id/txtStatus"
+                    android:text="Trạng thái: Chưa vượt ngân sách"
+                    android:textSize="14sp"
+                    android:layout_marginTop="8dp"
+                    android:textColor="@android:color/darker_gray"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Card chỉnh sửa hạn mức -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="20dp"
+            app:cardUseCompatPadding="true"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:text="Thiết lập / thay đổi hạn mức"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/black"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <!-- Ô nhập hạn mức -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/tilLimit"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:hint="Hạn mức chi tiêu (đ)"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    app:boxStrokeWidth="1dp"
+                    app:boxStrokeWidthFocused="2dp">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/edtLimit"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="number"
+                        android:minHeight="48dp" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Nút lưu -->
+                <Button
+                    android:id="@+id/btnSaveBudget"
+                    android:text="Lưu ngân sách"
+                    android:layout_marginTop="16dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:text="* Gợi ý: Đặt hạn mức phù hợp với thu nhập hàng tháng của bạn."
+                    android:textSize="13sp"
+                    android:textColor="@android:color/darker_gray"
+                    android:layout_marginTop="8dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

@@ -8,133 +8,229 @@
     <LinearLayout
         android:orientation="vertical"
         android:padding="16dp"
+        android:paddingBottom="32dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <!-- Tên khoản -->
-        <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.Material3.TextInputLayout.FilledBox.Dense"
+        <!-- CARD 1: Số tiền + Thu/Chi + Ngày -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardType"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:boxBackgroundMode="filled"
-            app:hintEnabled="true">
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="20dp"
+            app:cardUseCompatPadding="true"
+            app:cardElevation="4dp">
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etTitle"
+            <LinearLayout
+                android:orientation="vertical"
+                android:padding="16dp"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:minHeight="56dp"
-                android:paddingVertical="12dp"
-                android:hint="@string/title_hint"
-                android:inputType="textPersonName"
-                android:importantForAutofill="no"
-                android:autofillHints="" />
-        </com.google.android.material.textfield.TextInputLayout>
+                android:layout_height="wrap_content">
 
-        <!-- Số tiền -->
-        <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.Material3.TextInputLayout.FilledBox.Dense"
+                <!-- Label Số tiền -->
+                <TextView
+                    android:id="@+id/lblAmount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Số tiền (VND)"
+                    android:textSize="14sp"
+                    android:textColor="@android:color/black"
+                    android:labelFor="@id/etAmount" />
+
+                <!-- Ô nhập Số tiền -->
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:hintEnabled="false"
+                    app:boxStrokeWidth="1dp"
+                    app:boxStrokeWidthFocused="2dp"
+                    android:layout_marginTop="4dp">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etAmount"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="number"
+                        android:textSize="14sp"
+                        android:minHeight="48dp"
+                        android:paddingVertical="8dp"
+                        android:includeFontPadding="false" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Thu / Chi -->
+                <RadioGroup
+                    android:id="@+id/rgType"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:layout_marginTop="12dp">
+
+                    <RadioButton
+                        android:id="@+id/rbIncome"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Thu"
+                        android:textSize="14sp"
+                        android:buttonTint="@android:color/holo_green_dark"
+                        android:textColor="@android:color/holo_green_dark"
+                        android:gravity="center" />
+
+                    <RadioButton
+                        android:id="@+id/rbExpense"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Chi"
+                        android:textSize="14sp"
+                        android:buttonTint="@android:color/holo_red_dark"
+                        android:textColor="@android:color/holo_red_dark"
+                        android:gravity="center" />
+                </RadioGroup>
+
+                <!-- Ngày giao dịch -->
+                <Button
+                    android:id="@+id/btnPickDate"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="44dp"
+                    android:layout_marginTop="12dp"
+                    android:text="Chọn ngày"
+                    android:textSize="14sp"
+                    android:backgroundTint="@android:color/holo_purple"
+                    android:textColor="@android:color/white" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- CARD 2: Thông tin chi tiết -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:boxBackgroundMode="filled"
-            app:hintEnabled="true">
+            app:cardCornerRadius="20dp"
+            app:cardUseCompatPadding="true"
+            app:cardElevation="4dp">
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etAmount"
+            <LinearLayout
+                android:orientation="vertical"
+                android:padding="16dp"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:minHeight="56dp"
-                android:paddingVertical="12dp"
-                android:hint="@string/amount_hint"
-                android:inputType="number"
-                android:importantForAutofill="no"
-                android:autofillHints="" />
-        </com.google.android.material.textfield.TextInputLayout>
+                android:layout_height="wrap_content">
 
-        <!-- Phân loại (dropdown) - FIX lỗi chồng chữ + thiếu tag -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilCategory"
-            style="@style/Widget.Material3.TextInputLayout.FilledBox.Dense"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/hint_category"
-            app:hintEnabled="true">
+                <!-- Label Tên khoản -->
+                <TextView
+                    android:id="@+id/lblTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Tên khoản"
+                    android:textSize="14sp"
+                    android:textColor="@android:color/black"
+                    android:labelFor="@id/etTitle" />
 
-            <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                android:id="@+id/etCategory"
-                style="@style/Widget.Material3.AutoCompleteTextView.FilledBox.Dense"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="@null"
-                android:focusable="false"
-                android:clickable="true"
-                android:cursorVisible="false"
-                android:importantForAutofill="no" />
-        </com.google.android.material.textfield.TextInputLayout>
+                <!-- Ô nhập Tên khoản -->
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:hintEnabled="false"
+                    app:boxStrokeWidth="1dp"
+                    app:boxStrokeWidthFocused="2dp"
+                    android:layout_marginTop="4dp">
 
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etTitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="48dp"
+                        android:paddingVertical="8dp"
+                        android:textSize="14sp"
+                        android:includeFontPadding="false"
+                        android:inputType="textPersonName" />
+                </com.google.android.material.textfield.TextInputLayout>
 
+                <!-- Label Phân loại -->
+                <TextView
+                    android:id="@+id/lblCategory"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="Phân loại"
+                    android:textSize="14sp"
+                    android:textColor="@android:color/black"
+                    android:labelFor="@id/etCategory" />
 
-        <!-- Ghi chú -->
-        <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.Material3.TextInputLayout.FilledBox.Dense"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:boxBackgroundMode="filled"
-            app:hintEnabled="true">
+                <!-- Dropdown danh mục -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/tilCategory"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:hintEnabled="false"
+                    app:boxStrokeWidth="1dp"
+                    app:boxStrokeWidthFocused="2dp"
+                    app:endIconMode="dropdown_menu"
+                    android:layout_marginTop="4dp">
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etNote"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:minHeight="56dp"
-                android:paddingVertical="12dp"
-                android:hint="@string/note_hint"
-                android:inputType="textMultiLine"
-                android:maxLines="4"
-                android:importantForAutofill="no"
-                android:autofillHints="" />
-        </com.google.android.material.textfield.TextInputLayout>
+                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                        android:id="@+id/etCategory"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="48dp"
+                        android:paddingVertical="8dp"
+                        android:textSize="14sp"
+                        android:includeFontPadding="false"
+                        android:inputType="none"
+                        android:focusable="false"
+                        android:clickable="true" />
+                </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Loại giao dịch -->
-        <RadioGroup
-            android:id="@+id/rgType"
-            android:orientation="horizontal"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp">
+                <!-- Label Ghi chú -->
+                <TextView
+                    android:id="@+id/lblNote"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="Ghi chú"
+                    android:textSize="14sp"
+                    android:textColor="@android:color/black"
+                    android:labelFor="@id/etNote" />
 
-            <RadioButton
-                android:id="@+id/rbIncome"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:minHeight="48dp"
-                android:text="@string/income" />
+                <!-- Ô nhập ghi chú -->
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:hintEnabled="false"
+                    app:boxStrokeWidth="1dp"
+                    app:boxStrokeWidthFocused="2dp"
+                    android:layout_marginTop="4dp">
 
-            <RadioButton
-                android:id="@+id/rbExpense"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:minHeight="48dp"
-                android:layout_marginStart="16dp"
-                android:text="@string/expense" />
-        </RadioGroup>
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etNote"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minLines="3"
+                        android:gravity="top"
+                        android:textSize="14sp"
+                        android:includeFontPadding="false"
+                        android:inputType="textMultiLine" />
+                </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Chọn ngày -->
-        <Button
-            android:id="@+id/btnPickDate"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:minHeight="48dp"
-            android:text="@string/pick_date"
-            android:layout_marginTop="8dp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-        <!-- Lưu -->
+        <!-- Nút LƯU -->
         <Button
             android:id="@+id/btnSave"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:minHeight="48dp"
-            android:text="@string/save" />
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="120dp"
+            android:text="Lưu"
+            android:textSize="14sp" />
+
     </LinearLayout>
 </ScrollView>
