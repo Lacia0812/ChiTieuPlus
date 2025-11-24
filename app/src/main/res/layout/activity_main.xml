@@ -32,7 +32,7 @@
             app:popupTheme="@style/ThemeOverlay.MaterialComponents.Light"
             app:title="">
 
-            <!-- 👇 Logo dính sát mép trái -->
+            <!-- 👇 Logo ở mép trái -->
             <ImageView
                 android:id="@+id/ivLogo"
                 android:layout_width="wrap_content"
@@ -43,6 +43,7 @@
                 android:paddingStart="0dp"
                 android:paddingEnd="0dp"
                 android:layout_marginStart="0dp" />
+
         </com.google.android.material.appbar.MaterialToolbar>
     </com.google.android.material.appbar.AppBarLayout>
 

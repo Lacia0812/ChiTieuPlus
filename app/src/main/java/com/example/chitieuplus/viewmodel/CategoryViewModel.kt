@@ -15,16 +15,64 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class CategoryViewModel(app: Application, dao: CategoryDao) : AndroidViewModel(app) {
+
     private val repo: CategoryRepository = CategoryRepositoryImpl(dao)
 
-    // Quan sát danh mục
+    // ====== DANH MỤC MẶC ĐỊNH (THU / CHI) ======
+    private val defaultIncomeCategories = listOf(
+        "Lương",
+        "Thưởng",
+        "Bán hàng",
+        "Lãi tiết kiệm",
+        "Chuyển tiền đến",
+        "Khác (Thu)"
+    )
+
+    private val defaultExpenseCategories = listOf(
+        "Ăn uống",
+        "Đi lại",
+        "Hóa đơn điện nước",
+        "Mua sắm",
+        "Giải trí",
+        "Giáo dục",
+        "Sức khỏe",
+        "Nhà cửa",
+        "Chuyển tiền đi",
+        "Khác (Chi)"
+    )
+
+    init {
+        // Seed dữ liệu mẫu ngay khi ViewModel được khởi tạo.
+        // Dùng addIfMissing + unique index nên KHÔNG bị tạo trùng dù gọi nhiều lần.
+        viewModelScope.launch(Dispatchers.IO) {
+            seedDefaultCategories()
+        }
+    }
+
+    private suspend fun seedDefaultCategories() {
+        defaultIncomeCategories.forEach { name ->
+            val trimmed = name.trim()
+            if (trimmed.isNotEmpty()) {
+                repo.addIfMissing(trimmed, TransactionType.INCOME)
+            }
+        }
+
+        defaultExpenseCategories.forEach { name ->
+            val trimmed = name.trim()
+            if (trimmed.isNotEmpty()) {
+                repo.addIfMissing(trimmed, TransactionType.EXPENSE)
+            }
+        }
+    }
+
+    // ==== Quan sát danh mục ====
     fun observeAll(): LiveData<List<CategoryEntity>> = repo.observeAll()
     fun observeByType(type: TransactionType): LiveData<List<CategoryEntity>> = repo.observeByType(type)
 
     // Dành cho AutoComplete trong EditTransactionFragment
     fun namesByType(type: TransactionType): LiveData<List<String>> = repo.namesByType(type)
 
-    // Thao tác CRUD
+    // ==== Thao tác CRUD ====
     fun add(name: String, type: TransactionType) = viewModelScope.launch(Dispatchers.IO) {
         if (name.isNotBlank()) repo.add(name.trim(), type)
     }

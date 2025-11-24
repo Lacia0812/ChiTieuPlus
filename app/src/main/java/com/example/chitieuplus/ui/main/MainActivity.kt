@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -19,27 +18,25 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
 
+        // ❌ Không dùng enableEdgeToEdge nữa
         vb = ActivityMainBinding.inflate(layoutInflater)
         setContentView(vb.root)
 
-        // Gắn Toolbar làm ActionBar
+        // Toolbar + logo
         setSupportActionBar(vb.toolbar)
-        supportActionBar?.setDisplayShowTitleEnabled(false) // dùng logo / custom title
+        supportActionBar?.setDisplayShowTitleEnabled(false)
 
-        // Lấy NavController từ NavHostFragment
+        // NavController từ NavHost (id = nav_host trong activity_main.xml)
         val navHost =
             supportFragmentManager.findFragmentById(vb.navHost.id) as NavHostFragment
         val navController = navHost.navController
 
-        // Để nút back trên toolbar hoạt động với Navigation
+        // Nút back trên toolbar + bottom nav
         setupActionBarWithNavController(navController)
-
-        // 🔥 Gắn BottomNavigationView với NavController
         vb.bottomNav.setupWithNavController(navController)
 
-        // Tuỳ chọn: xin quyền thông báo nếu sau này bạn dùng Notification (có thể bỏ nếu không dùng)
+        // Nếu cần thông báo thì xin quyền (không ảnh hưởng gì tới bàn phím)
         requestNotificationPermissionIfNeeded()
     }
 
@@ -50,7 +47,6 @@ class MainActivity : AppCompatActivity() {
         return navController.navigateUp() || super.onSupportNavigateUp()
     }
 
-    // ----- OPTIONAL: xin quyền POST_NOTIFICATIONS trên Android 13+ -----
     private fun requestNotificationPermissionIfNeeded() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val permission = Manifest.permission.POST_NOTIFICATIONS
